@@ -99,6 +99,130 @@ function CapabilityCard({ icon, id, label, title, desc, activeColor, index, cont
   );
 }
 
+/* ── Floating Tech Particles Canvas ── */
+function FloatingParticles({ activeColor }) {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d', { alpha: true });
+    
+    let animationFrameId;
+    let width = window.innerWidth;
+    let height = canvas.parentElement.offsetHeight;
+    
+    const handleResize = () => {
+      width = window.innerWidth;
+      height = canvas.parentElement.offsetHeight;
+      canvas.width = width * window.devicePixelRatio;
+      canvas.height = height * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    };
+    handleResize();
+
+    const particleCount = 50;
+    const particles = Array.from({ length: particleCount }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      size: 3 + Math.random() * 8,
+      speedX: (Math.random() - 0.5) * 0.3,
+      speedY: (Math.random() - 0.5) * 0.3,
+      parallax: 0.2 + Math.random() * 1.3,
+      opacity: 0.03 + Math.random() * 0.09,
+      type: Math.floor(Math.random() * 4),
+      angle: Math.random() * Math.PI * 2,
+    }));
+
+    let mouseX = -1000;
+    let mouseY = -1000;
+    
+    const handleMouseMove = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      mouseX = e.clientX - rect.left;
+      mouseY = e.clientY - rect.top;
+    };
+    
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('mousemove', handleMouseMove);
+
+    const draw = () => {
+      ctx.clearRect(0, 0, width, height);
+      
+      const scrollY = window.scrollY;
+
+      particles.forEach(p => {
+        p.x += p.speedX;
+        p.y += p.speedY;
+        
+        if (p.x < -20) p.x = width + 20;
+        if (p.x > width + 20) p.x = -20;
+        if (p.y < -20) p.y = height + 20;
+        if (p.y > height + 20) p.y = -20;
+
+        // Apply parallax offset
+        const renderY = p.y - scrollY * p.parallax * 0.3;
+        
+        // Mouse repulsion relative to visible position
+        const dx = mouseX - p.x;
+        const dy = mouseY - renderY;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < 120) {
+          p.x -= (dx / dist) * 1.5;
+          p.y -= (dy / dist) * 1.5;
+        }
+
+        ctx.save();
+        ctx.translate(p.x, renderY);
+        ctx.rotate(p.angle);
+        ctx.globalAlpha = p.opacity;
+        ctx.fillStyle = activeColor;
+        ctx.strokeStyle = activeColor;
+        ctx.lineWidth = 1;
+
+        if (p.type === 0) {
+          ctx.beginPath();
+          ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (p.type === 1) {
+          ctx.beginPath();
+          ctx.moveTo(-p.size, 0);
+          ctx.lineTo(p.size, 0);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(p.size, 0, p.size / 4, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (p.type === 2) {
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+        } else {
+          ctx.beginPath();
+          ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      });
+
+      animationFrameId = requestAnimationFrame(draw);
+    };
+
+    draw();
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('mousemove', handleMouseMove);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [activeColor]);
+
+  return (
+    <canvas 
+      ref={canvasRef} 
+      className="absolute inset-0 pointer-events-none z-10 w-full h-full"
+    />
+  );
+}
+
 /* ── Main Section ── */
 export function Capabilities({ activeColor, activePanelColor }) {
   const containerRef = useRef(null);
@@ -180,6 +304,9 @@ export function Capabilities({ activeColor, activePanelColor }) {
         style={{ backgroundColor: activePanelColor, transition: 'background-color 650ms cubic-bezier(0.4, 0, 0.2, 1)' }}
         className="absolute bottom-10 left-10 w-[500px] h-[500px] rounded-full opacity-[0.01] blur-3xl pointer-events-none"
       />
+
+      {/* Floating Tech Particles */}
+      <FloatingParticles activeColor={activeColor} />
 
       {/* ── Content ── */}
       <div className="max-w-7xl mx-auto px-6 sm:px-12 lg:px-16 relative z-20">

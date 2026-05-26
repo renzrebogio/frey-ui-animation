@@ -18,8 +18,6 @@ export default function App() {
   const [isMobile, setIsMobile] = useState(false);
 
   const [showSplash, setShowSplash] = useState(true);
-  const [splashFade, setSplashFade] = useState(false);
-  const [progressWidth, setProgressWidth] = useState('0%');
 
   // Navigation states
   const [isScrolled, setIsScrolled] = useState(false);
@@ -50,21 +48,11 @@ export default function App() {
 
   // Handle splash screen timing
   useEffect(() => {
-    const progressTimer = setTimeout(() => {
-      setProgressWidth('100%');
-    }, 100);
-
-    const fadeTimer = setTimeout(() => {
-      setSplashFade(true);
-    }, 2800);
-
     const removeTimer = setTimeout(() => {
       setShowSplash(false);
-    }, 3600);
+    }, 5200);
 
     return () => {
-      clearTimeout(progressTimer);
-      clearTimeout(fadeTimer);
       clearTimeout(removeTimer);
     };
   }, []);
@@ -180,11 +168,7 @@ export default function App() {
     <>
 
       {showSplash && (
-        <Splash
-          progressWidth={progressWidth}
-          splashFade={splashFade}
-          onEnter={() => setSplashFade(true)}
-        />
+        <Splash />
       )}
 
       <Navbar

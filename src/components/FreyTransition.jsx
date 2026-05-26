@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
-import { motion, useScroll, useTransform } from 'motion/react';
+import { motion, useScroll, useTransform, useSpring } from 'motion/react';
 
 /* ── Tiny spark particles that fire when powering up ── */
 function Spark({ delay, x, y, color }) {
@@ -40,6 +40,13 @@ export function FreyTransition({ activeColor }) {
     offset: ["start end", "end start"],
   });
 
+  // Smooth out the scroll value to prevent "jumping from frame to frame" on mousewheel
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
+
   // ── CAMERA movement via translateZ (perspective-based zoom) ──
   // Phase 1 (0 → 0.2):  Camera far away, FREY visible but dim
   // Phase 2 (0.2 → 0.4): Camera dollies IN toward FREY
@@ -47,14 +54,20 @@ export function FreyTransition({ activeColor }) {
   // Phase 4 (0.65 → 0.85): Camera dollies BACK OUT
   // Phase 5 (0.85 → 1.0): Fade to next section
 
-  // Camera Z position: 0 = neutral, positive = closer to subject
-  const cameraZ = useTransform(scrollYProgress,
+  // Phase 1 (0 → 0.15):  Camera neutral, FREY visible but dim
+  // Phase 2 (0.15 → 0.35): Camera perfectly zooms IN
+  // Phase 3 (0.35 → 0.6): Camera holds close — FREY powers up
+  // Phase 4 (0.6 → 0.8): Camera zooms BACK OUT
+  // Phase 5 (0.8 → 1.0): Fade to next section
+
+  // Camera Scale: Perfectly smooth 2D/3D scaling
+  const cameraScale = useTransform(smoothProgress,
     [0,    0.15,  0.35,  0.6,   0.8,   1],
-    [0,    0,     350,   350,   0,     -100]
+    [1,    1,     1.6,   1.6,   1,     0.8]
   );
 
   // Power-up glow intensity
-  const glowIntensity = useTransform(scrollYProgress,
+  const glowIntensity = useTransform(smoothProgress,
     [0, 0.3, 0.42, 0.55, 0.65, 0.8],
     [0, 0,   1,    1,    1,    0]
   );
@@ -72,7 +85,7 @@ export function FreyTransition({ activeColor }) {
   );
 
   // Subtitle appears during hold phase
-  const subtitleOpacity = useTransform(scrollYProgress,
+  const subtitleOpacity = useTransform(smoothProgress,
     [0, 0.4, 0.48, 0.6, 0.72],
     [0, 0,   1,    1,   0]
   );
@@ -81,18 +94,18 @@ export function FreyTransition({ activeColor }) {
   const powerLineWidth = useTransform(glowIntensity, [0, 0.5, 1], ['0%', '30%', '60%']);
 
   // Overall section opacity
-  const sectionOpacity = useTransform(scrollYProgress,
+  const sectionOpacity = useTransform(smoothProgress,
     [0, 0.05, 0.85, 1],
     [0, 1,    1,    0]
   );
 
   // Track power state for sparks
   useEffect(() => {
-    const unsub = scrollYProgress.on("change", (v) => {
+    const unsub = smoothProgress.on("change", (v) => {
       setIsPowered(v > 0.38 && v < 0.72);
     });
     return unsub;
-  }, [scrollYProgress]);
+  }, [smoothProgress]);
 
   // Canvas: Draw converging structured PCB traces
   useEffect(() => {
@@ -184,7 +197,7 @@ export function FreyTransition({ activeColor }) {
     let lastProgress = -1;
 
     const draw = () => {
-      const progress = scrollYProgress.get();
+      const progress = smoothProgress.get();
       if (Math.abs(progress - lastProgress) < 0.001) {
         animId = requestAnimationFrame(draw);
         return;
@@ -269,7 +282,7 @@ export function FreyTransition({ activeColor }) {
       }
     };
 
-    const unsub = scrollYProgress.on("change", requestDraw);
+    const unsub = smoothProgress.on("change", requestDraw);
     requestDraw(); // Initial draw
     window.addEventListener('resize', resize);
 
@@ -278,7 +291,7 @@ export function FreyTransition({ activeColor }) {
       if (pendingFrame) cancelAnimationFrame(pendingFrame);
       window.removeEventListener('resize', resize);
     };
-  }, [activeColor, scrollYProgress]);
+  }, [activeColor, smoothProgress]);
 
   // Pre-generated spark positions
   const sparks = Array.from({ length: 12 }, (_, i) => ({
@@ -298,28 +311,23 @@ export function FreyTransition({ activeColor }) {
         className="sticky top-0 w-full h-screen overflow-hidden"
         style={{
           opacity: sectionOpacity,
-          perspective: '1200px',
         }}
       >
-        {/* ── CAMERA RIG ── moves via translateZ, everything inside moves with it */}
+        {/* ── CAMERA RIG ── moves via scale, everything inside scales with it */}
         <motion.div
           className="absolute inset-0 flex items-center justify-center"
           style={{
-            transformStyle: 'preserve-3d',
-            translateZ: cameraZ,
+            scale: cameraScale,
           }}
         >
-          {/* PCB convergence canvas (part of the 3D scene) */}
           <canvas
             ref={canvasRef}
             className="absolute inset-0 w-full h-full pointer-events-none"
-            style={{ transform: 'translateZ(0)' }}
           />
 
-          {/* FREY text — fixed in 3D space, camera approaches it */}
+          {/* FREY text — scales along with the camera rig */}
           <div
             className="relative z-10 flex flex-col items-center justify-center px-12 py-16"
-            style={{ transform: 'translateZ(0)' }}
           >
             {/* Ambient occlusion/darkness mask behind text to block busy background lines */}
             <div
@@ -382,7 +390,7 @@ export function FreyTransition({ activeColor }) {
           {/* Corner circuit decorations */}
           <motion.div
             className="absolute top-12 left-12 pointer-events-none z-0"
-            style={{ opacity: useTransform(scrollYProgress, [0, 0.15], [0, 0.4]) }}
+            style={{ opacity: useTransform(smoothProgress, [0, 0.15], [0, 0.4]) }}
           >
             <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
               <path d="M0 40 L40 40 L40 0" stroke={activeColor} strokeWidth="1" opacity="0.3" />
@@ -391,7 +399,7 @@ export function FreyTransition({ activeColor }) {
           </motion.div>
           <motion.div
             className="absolute bottom-12 right-12 pointer-events-none z-0"
-            style={{ opacity: useTransform(scrollYProgress, [0, 0.15], [0, 0.4]) }}
+            style={{ opacity: useTransform(smoothProgress, [0, 0.15], [0, 0.4]) }}
           >
             <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
               <path d="M80 40 L40 40 L40 80" stroke={activeColor} strokeWidth="1" opacity="0.3" />
@@ -404,7 +412,7 @@ export function FreyTransition({ activeColor }) {
         <motion.div
           className="absolute left-0 w-full h-[1px] pointer-events-none z-20"
           style={{
-            top: useTransform(scrollYProgress, [0.38, 0.55], ['30%', '70%']),
+            top: useTransform(smoothProgress, [0.38, 0.55], ['30%', '70%']),
             opacity: useTransform(glowIntensity, [0, 0.5, 1], [0, 0.6, 0]),
             background: `linear-gradient(90deg, transparent, ${activeColor}80, transparent)`,
             boxShadow: `0 0 15px ${activeColor}`,

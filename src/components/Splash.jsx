@@ -1,18 +1,121 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-export function Splash({ progressWidth, splashFade, onEnter }) {
+const lines = [
+  // Top-Left (Orange)
+  { color: '#e05c3a', path: 'M0,0 L15,0 L15,30 L40,30 L40,48 L50,50' }, 
+  // Top-Right (Green)
+  { color: '#10b981', path: 'M100,0 L85,0 L85,25 L60,25 L60,45 L50,50' }, 
+  // Bottom-Left (Red)
+  { color: '#ef4444', path: 'M0,100 L20,100 L20,70 L40,70 L40,55 L50,50' }, 
+  // Bottom-Right (Blue)
+  { color: '#3b82f6', path: 'M100,100 L75,100 L75,80 L55,80 L55,55 L50,50' }, 
+];
+
+export function Splash() {
+  const [phase, setPhase] = useState(0);
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setPhase(1), 100);   // Draw lines & show dim text
+    const t2 = setTimeout(() => setPhase(2), 2200);  // Hit center -> Shake
+    const t3 = setTimeout(() => setPhase(3), 2700);  // End shake -> Zoom out FREY
+    const t4 = setTimeout(() => setPhase(4), 4000);  // Curtains open
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
+    };
+  }, []);
+
   return (
     <div
       id="frey-splash-screen"
       style={{
-        backgroundColor: '#0a0a0a',
-        transition: 'all 800ms cubic-bezier(0.4, 0, 0.2, 1)',
-        transform: splashFade ? 'scale(1.04)' : 'scale(1)',
-        opacity: splashFade ? 0 : 1,
+        backgroundColor: 'transparent',
+        opacity: phase >= 5 ? 0 : 1,
+        transition: 'opacity 800ms ease-in-out',
+        pointerEvents: phase >= 4 ? 'none' : 'auto',
       }}
-      className="fixed inset-0 z-[100] flex flex-col items-center justify-center select-none pointer-events-auto overflow-hidden text-white"
+      className="fixed inset-0 z-[100] flex flex-col items-center justify-center select-none overflow-hidden text-white"
     >
-      {/* Grain overlay for consistent visual design */}
+      <style>{`
+        @keyframes rgb-shake {
+          0% { transform: translate(0, 0) scale(3); text-shadow: 4px 4px 0px #ef4444, -4px -4px 0px #3b82f6; }
+          20% { transform: translate(-6px, 4px) scale(3); text-shadow: -4px 4px 0px #10b981, 4px -4px 0px #e05c3a; }
+          40% { transform: translate(6px, -4px) scale(3); text-shadow: 4px -4px 0px #ef4444, -4px 4px 0px #3b82f6; }
+          60% { transform: translate(-4px, -6px) scale(3); text-shadow: -4px -4px 0px #10b981, 4px 4px 0px #e05c3a; }
+          80% { transform: translate(4px, 6px) scale(3); text-shadow: 4px 4px 0px #ef4444, -4px -4px 0px #3b82f6; }
+          100% { transform: translate(0, 0) scale(3); text-shadow: 0px 0px 0px transparent; }
+        }
+        .shake-active {
+          animation: rgb-shake 400ms cubic-bezier(0.36, 0, 0.66, -0.56) forwards;
+        }
+      `}</style>
+
+      {/* SVG Circuit Lines */}
+      <svg 
+        className="absolute inset-0 w-full h-full pointer-events-none z-10" 
+        viewBox="0 0 100 100" 
+        preserveAspectRatio="none"
+        style={{
+          opacity: phase >= 4 ? 0 : 1,
+          transition: 'opacity 400ms ease',
+        }}
+      >
+        {lines.map((l, i) => (
+          <path
+            key={i}
+            d={l.path}
+            stroke={l.color}
+            strokeWidth="0.3"
+            fill="none"
+            pathLength="100"
+            style={{
+              strokeDasharray: 100,
+              strokeDashoffset: phase >= 1 ? 0 : 100,
+              transition: 'stroke-dashoffset 2000ms cubic-bezier(0.5, 0, 0.2, 1)',
+              filter: `drop-shadow(0 0 4px ${l.color})`
+            }}
+          />
+        ))}
+      </svg>
+
+      {/* Top tech curtain */}
+      <div 
+        className="absolute left-0 right-0 top-0 bg-[#070709] z-0 flex items-end justify-center overflow-hidden"
+        style={{ 
+          height: '50vh',
+          transform: phase >= 4 ? 'translateY(-100%)' : 'translateY(0)', 
+          transition: 'transform 1000ms cubic-bezier(0.7, 0, 0.3, 1)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+        }}
+      >
+         {/* Top curtain colors */}
+         <div className="absolute bottom-0 left-0 w-1/2 h-[2px] bg-[#e05c3a]" 
+           style={{ opacity: phase >= 2 ? 1 : 0, transition: 'opacity 300ms', boxShadow: '0 0 15px #e05c3a' }} />
+         <div className="absolute bottom-0 right-0 w-1/2 h-[2px] bg-[#10b981]" 
+           style={{ opacity: phase >= 2 ? 1 : 0, transition: 'opacity 300ms', boxShadow: '0 0 15px #10b981' }} />
+      </div>
+
+      {/* Bottom tech curtain */}
+      <div 
+        className="absolute left-0 right-0 bottom-0 bg-[#070709] z-0 flex items-start justify-center overflow-hidden"
+        style={{ 
+          height: '50vh',
+          transform: phase >= 4 ? 'translateY(100%)' : 'translateY(0)', 
+          transition: 'transform 1000ms cubic-bezier(0.7, 0, 0.3, 1)',
+          borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+        }}
+      >
+         {/* Bottom curtain colors */}
+         <div className="absolute top-0 left-0 w-1/2 h-[2px] bg-[#ef4444]" 
+           style={{ opacity: phase >= 2 ? 1 : 0, transition: 'opacity 300ms', boxShadow: '0 0 15px #ef4444' }} />
+         <div className="absolute top-0 right-0 w-1/2 h-[2px] bg-[#3b82f6]" 
+           style={{ opacity: phase >= 2 ? 1 : 0, transition: 'opacity 300ms', boxShadow: '0 0 15px #3b82f6' }} />
+      </div>
+
+      {/* Grain overlay */}
       <div
         id="splash-grain"
         style={{
@@ -21,64 +124,49 @@ export function Splash({ progressWidth, splashFade, onEnter }) {
           backgroundSize: '200px 200px',
           backgroundRepeat: 'repeat',
         }}
-        className="absolute inset-0 pointer-events-none z-10"
+        className="absolute inset-0 pointer-events-none z-10 mix-blend-overlay"
       />
-
-      {/* Dynamic Abstract Glowing Orbs in the Background */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-white/[0.02] blur-3xl pointer-events-none animate-pulse duration-[6000ms]" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-white/[0.015] blur-3xl pointer-events-none animate-pulse duration-[8000ms]" />
 
       {/* Central Brand Typography Block */}
       <div className="relative z-20 flex flex-col items-center text-center px-6">
-        {/* Accent Mini-Header */}
-        <span 
-          className="text-white/40 text-[10px] sm:text-xs font-bold tracking-[0.4em] uppercase mb-4"
-        >
-          PROJECT PRESENTATION
-        </span>
-
-        {/* Master Company Name Heading */}
         <h1
           style={{
             fontFamily: "'Anton', sans-serif",
-            letterSpacing: splashFade ? '0.22em' : '0.04em',
-            transition: 'letter-spacing 2500ms cubic-bezier(0.1, 0.8, 0.2, 1)',
+            letterSpacing: phase >= 3 ? '0.04em' : '-0.02em',
+            transform: phase >= 3 ? 'scale(1)' : 'scale(3)',
+            opacity: phase >= 1 ? 1 : 0,
+            transition: phase >= 3 
+              ? 'transform 1200ms cubic-bezier(0.2, 0.8, 0.2, 1), letter-spacing 1200ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 800ms ease-out'
+              : 'opacity 400ms ease-out',
+            color: phase >= 2 ? '#ffffff' : 'rgba(255,255,255,0.08)',
           }}
-          className="text-white text-7xl sm:text-9xl md:text-[11rem] leading-none uppercase tracking-tight relative mb-3 font-bold"
+          className={`text-7xl sm:text-9xl md:text-[11rem] leading-none uppercase tracking-tight relative mb-3 font-bold ${phase === 2 ? 'shake-active' : ''}`}
         >
           FREY
         </h1>
 
-        {/* Custom Elegant Subtitle */}
-        <p className="text-white/60 text-xs sm:text-sm font-medium tracking-[0.3em] uppercase max-w-xs sm:max-w-md mb-12">
-          PREMIUM SOFTWARE ENGINEERING
-        </p>
-
-        {/* Premium Loading Progress Bar */}
-        <div className="w-40 sm:w-48 h-[2px] bg-white/10 rounded-full overflow-hidden relative mb-12">
-          <div 
+        <div style={{ overflow: 'hidden' }}>
+          <p 
             style={{
-              transition: 'width 2400ms cubic-bezier(0.1, 0.85, 0.25, 1)',
-              width: progressWidth,
+              opacity: phase >= 3 ? 1 : 0,
+              transform: phase >= 3 ? 'translateY(0)' : 'translateY(100%)',
+              transition: 'opacity 800ms ease-out 600ms, transform 800ms cubic-bezier(0.2, 0.8, 0.2, 1) 600ms',
             }}
-            className="absolute left-0 top-0 h-full bg-white opacity-80"
-            id="splash-loader-progress"
-          />
+            className="text-white/60 text-xs sm:text-sm font-medium tracking-[0.3em] uppercase max-w-xs sm:max-w-md mb-12"
+          >
+            PREMIUM SOFTWARE ENGINEERING
+          </p>
         </div>
-
-        {/* Prompt / Bypass Button */}
-        <button
-          id="splash-skip-btn"
-          type="button"
-          onClick={onEnter}
-          className="px-6 py-2 border border-white/20 hover:border-white/60 rounded-full text-white/50 hover:text-white text-xs tracking-[0.2em] uppercase transition-all duration-300 hover:bg-white/5 active:scale-95 cursor-pointer"
-        >
-          ENTER EXPERIENCE
-        </button>
       </div>
 
       {/* Minimal Footer Credits */}
-      <div className="absolute bottom-8 left-0 right-0 text-center z-20">
+      <div 
+        style={{
+          opacity: phase >= 3 ? 1 : 0,
+          transition: 'opacity 800ms ease-out 800ms',
+        }}
+        className="absolute bottom-8 left-0 right-0 text-center z-20"
+      >
         <span className="text-white/20 text-[9px] tracking-[0.25em] uppercase">
           © 2026 FREY. ALL RIGHTS RESERVED.
         </span>
