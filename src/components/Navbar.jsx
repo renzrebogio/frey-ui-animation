@@ -1,6 +1,6 @@
 import { Menu, X } from 'lucide-react';
 
-export function Navbar({ isScrolled, mobileMenuOpen, setMobileMenuOpen }) {
+export function Navbar({ isScrolled, mobileMenuOpen, setMobileMenuOpen, activeColor }) {
   const handleScrollTo = (id) => {
     setMobileMenuOpen(false);
     const el = document.getElementById(id);
@@ -12,23 +12,26 @@ export function Navbar({ isScrolled, mobileMenuOpen, setMobileMenuOpen }) {
       id="global-navbar"
       style={{
         transition: 'all 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+        backgroundColor: isScrolled ? 'rgba(6, 6, 8, 0.92)' : 'transparent',
+        backdropFilter: isScrolled ? 'blur(16px) saturate(180%)' : 'none',
+        borderBottom: isScrolled ? '1px solid rgba(255, 255, 255, 0.06)' : '1px solid transparent',
       }}
-      className={`fixed top-0 inset-x-0 z-40 px-6 py-4 sm:px-10 sm:py-5 flex items-center justify-between transition-all duration-300 ${
+      className={`fixed top-0 inset-x-0 z-40 px-6 py-4 sm:px-10 sm:py-5 flex items-center justify-between ${
         isScrolled 
-          ? 'bg-[#060608]/90 backdrop-blur-md border-b border-white/5 py-3 sm:py-4 shadow-[0_10px_30px_rgba(0,0,0,0.3)]' 
-          : 'bg-transparent border-b border-transparent'
+          ? 'py-3 sm:py-4 shadow-[0_10px_30px_rgba(0,0,0,0.4)]' 
+          : ''
       }`}
     >
       <div className="flex items-center gap-3">
         <span 
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           style={{ fontFamily: "'Anton', sans-serif" }}
-          className="text-white text-lg tracking-[0.2em] uppercase font-black cursor-pointer select-none"
+          className="text-white text-lg tracking-[0.2em] uppercase font-black cursor-pointer select-none drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]"
         >
           FREY
         </span>
-        <div className="hidden sm:flex h-3 w-[1px] bg-white/20" />
-        <span className="hidden sm:inline text-white/40 font-mono text-[9px] tracking-widest uppercase">
+        <div className="hidden sm:flex h-3 w-[1px] bg-white/30" />
+        <span className="hidden sm:inline text-white/60 font-mono text-[9px] tracking-widest uppercase drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]">
           SOFTWARE ENGINEERING
         </span>
       </div>
@@ -38,21 +41,21 @@ export function Navbar({ isScrolled, mobileMenuOpen, setMobileMenuOpen }) {
         <button
           type="button"
           onClick={() => handleScrollTo('frey-hero-section')}
-          className="text-[10px] font-mono font-bold tracking-[0.25em] text-white/60 hover:text-white transition-colors duration-200 uppercase cursor-pointer"
+          className="text-[10px] font-mono font-bold tracking-[0.25em] text-white/80 hover:text-white transition-colors duration-200 uppercase cursor-pointer drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]"
         >
           Team
         </button>
         <button
           type="button"
           onClick={() => handleScrollTo('discover')}
-          className="text-[10px] font-mono font-bold tracking-[0.25em] text-white/60 hover:text-white transition-colors duration-200 uppercase cursor-pointer"
+          className="text-[10px] font-mono font-bold tracking-[0.25em] text-white/80 hover:text-white transition-colors duration-200 uppercase cursor-pointer drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]"
         >
           Capabilities
         </button>
         <button
           type="button"
           onClick={() => handleScrollTo('projects')}
-          className="text-[10px] font-mono font-bold tracking-[0.25em] text-white/60 hover:text-white transition-colors duration-200 uppercase cursor-pointer"
+          className="text-[10px] font-mono font-bold tracking-[0.25em] text-white/80 hover:text-white transition-colors duration-200 uppercase cursor-pointer drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]"
         >
           Projects
         </button>
@@ -60,14 +63,14 @@ export function Navbar({ isScrolled, mobileMenuOpen, setMobileMenuOpen }) {
 
       {/* Action Button & Mobile Menu Toggle */}
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 px-3 py-1 bg-white/[0.04] border border-white/10 rounded-full select-none">
+        <div className="flex items-center gap-2 px-3 py-1 bg-white/[0.08] border border-white/15 rounded-full select-none backdrop-blur-sm">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-[9px] font-mono text-white/50 tracking-wider">LIVE NODE</span>
+          <span className="text-[9px] font-mono text-white/70 tracking-wider drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">LIVE NODE</span>
         </div>
 
         <button
           onClick={() => handleScrollTo('contact')}
-          className="hidden md:inline-flex px-4 py-1.5 rounded-full bg-white text-black text-[10px] font-mono tracking-widest font-bold uppercase transition-all duration-200 hover:bg-white/95 hover:scale-103 active:scale-97 cursor-pointer"
+          className="hidden md:inline-flex px-4 py-1.5 rounded-full bg-white text-black text-[10px] font-mono tracking-widest font-bold uppercase transition-all duration-200 hover:bg-white/95 hover:scale-103 active:scale-97 cursor-pointer shadow-[0_2px_10px_rgba(255,255,255,0.15)]"
         >
           Contact
         </button>

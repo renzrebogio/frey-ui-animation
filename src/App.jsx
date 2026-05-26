@@ -9,6 +9,8 @@ import { Capabilities } from './components/Capabilities.jsx';
 import { ProjectsSection } from './components/ProjectsSection.jsx';
 import { ContactSection } from './components/ContactSection.jsx';
 import { Footer } from './components/Footer.jsx';
+import { DensePcbCanvas } from './components/DensePcbCanvas.jsx';
+import { FreyTransition } from './components/FreyTransition.jsx';
 
 export default function App() {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -23,12 +25,20 @@ export default function App() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Always reset scroll position to topmost part of the page on refresh
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+    window.scrollTo(0, 0);
+  }, []);
+
   // Monitor scroll for dynamic navigation bar styling
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 40);
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
@@ -168,6 +178,7 @@ export default function App() {
 
   return (
     <>
+
       {showSplash && (
         <Splash
           progressWidth={progressWidth}
@@ -180,7 +191,10 @@ export default function App() {
         isScrolled={isScrolled}
         mobileMenuOpen={mobileMenuOpen}
         setMobileMenuOpen={setMobileMenuOpen}
+        activeColor={IMAGES[activeIndex].bg}
       />
+
+      <DensePcbCanvas activeColor={IMAGES[activeIndex].bg} />
 
       <HeroSection
         activeIndex={activeIndex}
@@ -193,13 +207,14 @@ export default function App() {
 
       <Capabilities activeColor={IMAGES[activeIndex].bg} activePanelColor={IMAGES[activeIndex].panel} />
 
+      <FreyTransition activeColor={IMAGES[activeIndex].bg} />
+
       <ProjectsSection
-        activeColor={IMAGES[activeIndex].bg}
-        activePanelColor={IMAGES[activeIndex].panel}
         activeProjectTab={activeProjectTab}
         setActiveProjectTab={setActiveProjectTab}
         currentSelectedProject={currentSelectedProject}
         setCurrentSelectedProject={setCurrentSelectedProject}
+        activeColor={IMAGES[activeIndex].bg}
       />
 
       <ContactSection

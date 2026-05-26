@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { motion, useScroll, useTransform } from 'motion/react';
 import { Mail, CheckCircle, Terminal, Send, Building2, Server, HelpCircle } from 'lucide-react';
 
 export function ContactSection({ activeColor, activePanelColor }) {
@@ -11,6 +12,28 @@ export function ContactSection({ activeColor, activePanelColor }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [terminalPayload, setTerminalPayload] = useState(null);
+  const containerRef = useRef(null);
+
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start end", "end start"]
+  });
+
+  const radarScale = useTransform(scrollYProgress, [0, 1], [0.5, 2.5]);
+  const radarOpacity = useTransform(scrollYProgress, [0, 0.3, 0.7, 1], [0, 0.8, 0.8, 0]);
+  const radarRotate = useTransform(scrollYProgress, [0, 1], [0, 180]);
+
+  const crosshairRotate = useTransform(scrollYProgress, [0, 1], [-45, 45]);
+  const crosshairOpacity = useTransform(radarOpacity, (v) => v * 0.5);
+
+  const leftColumnOpacity = useTransform(scrollYProgress, [0, 0.2], [0, 1]);
+  const leftColumnY = useTransform(scrollYProgress, [0, 0.2], [80, 0]);
+  const leftColumnFilter = useTransform(scrollYProgress, [0, 0.2], ['blur(4px)', 'blur(0px)']);
+
+  const rightColumnOpacity = useTransform(scrollYProgress, [0.05, 0.25], [0, 1]);
+  const rightColumnY = useTransform(scrollYProgress, [0.05, 0.25], [100, 0]);
+  const rightColumnScale = useTransform(scrollYProgress, [0.05, 0.25], [0.92, 1]);
+  const rightColumnFilter = useTransform(scrollYProgress, [0.05, 0.25], ['blur(4px)', 'blur(0px)']);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -50,14 +73,50 @@ export function ContactSection({ activeColor, activePanelColor }) {
 
   return (
     <section
+      ref={containerRef}
       id="contact"
-      className="relative w-full bg-[#08080a] text-white py-24 sm:py-32 select-text border-t border-white/5 overflow-hidden transition-colors duration-700"
+      className="relative w-full bg-transparent text-white py-24 sm:py-32 select-text border-t border-white/5 overflow-hidden transition-colors duration-700"
       style={{ 
         fontFamily: "'Inter', sans-serif",
         backgroundImage: `radial-gradient(circle at 90% 20%, ${activeColor}08, transparent 40%), radial-gradient(circle at 10% 80%, ${activePanelColor}05, transparent 50%)`,
         transition: 'background-image 650ms cubic-bezier(0.4, 0, 0.2, 1)'
       }}
     >
+      {/* Terminal/Radar Pulse Animation - Enhanced Visibility */}
+      <motion.div
+        className="absolute top-1/2 left-[30%] -translate-x-1/2 -translate-y-1/2 pointer-events-none z-0 border-[2px] rounded-full"
+        style={{
+          width: '50vw',
+          height: '50vw',
+          scale: radarScale,
+          opacity: radarOpacity,
+          borderColor: activeColor
+        }}
+      />
+      <motion.div
+        className="absolute top-1/2 left-[30%] -translate-x-1/2 -translate-y-1/2 pointer-events-none z-0 border-[3px] border-dashed rounded-full"
+        style={{
+          width: '30vw',
+          height: '30vw',
+          scale: radarScale,
+          rotate: radarRotate,
+          opacity: radarOpacity,
+          borderColor: activeColor
+        }}
+      />
+      {/* Rotating Targeting Crosshair */}
+      <motion.div
+        className="absolute top-1/2 left-[30%] -translate-x-1/2 -translate-y-1/2 pointer-events-none z-0"
+        style={{
+          width: '60vw',
+          height: '60vw',
+          rotate: crosshairRotate,
+          opacity: crosshairOpacity
+        }}
+      >
+        <div style={{ backgroundColor: activeColor }} className="absolute top-0 bottom-0 left-1/2 w-[1px] -translate-x-1/2 opacity-40" />
+        <div style={{ backgroundColor: activeColor }} className="absolute left-0 right-0 top-1/2 h-[1px] -translate-y-1/2 opacity-40" />
+      </motion.div>
       {/* Dynamic light grids & ambient lines */}
       <div
         id="contact-grid"
@@ -86,7 +145,15 @@ export function ContactSection({ activeColor, activePanelColor }) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
           
           {/* Left Column: Premium Pitch & Channels */}
-          <div className="lg:col-span-5 flex flex-col justify-between h-full">
+          <motion.div 
+            className="lg:col-span-5 flex flex-col justify-between h-full"
+            style={{
+              opacity: leftColumnOpacity,
+              y: leftColumnY,
+              filter: leftColumnFilter,
+              willChange: 'transform, opacity, filter'
+            }}
+          >
             <div>
               <span 
                 style={{
@@ -194,11 +261,20 @@ export function ContactSection({ activeColor, activePanelColor }) {
                 All communications sent to FREY are encrypted in transit and archived on zero-trust off-grid optical backplanes to adhere strictly to premium regulatory isolation criteria.
               </p>
             </div>
-          </div>
+          </motion.div>
 
           {/* Right Column: Interactive Submission Form / Sandbox Console */}
-          <div className="lg:col-span-7">
-            <div className="w-full bg-[#111114] border border-white/10 rounded-[32px] p-6 sm:p-10 relative overflow-hidden">
+          <motion.div 
+            className="lg:col-span-7"
+            style={{
+              opacity: rightColumnOpacity,
+              y: rightColumnY,
+              scale: rightColumnScale,
+              filter: rightColumnFilter,
+              willChange: 'transform, opacity, filter'
+            }}
+          >
+            <div className="w-full bg-[#111114] border border-white/10 rounded-[32px] p-6 sm:p-10 relative overflow-hidden shadow-2xl">
               
               {/* Shine backplate */}
               <div className="absolute top-0 right-0 w-[250px] h-[250px] rounded-full bg-white/[0.01] blur-2xl pointer-events-none" />
@@ -436,10 +512,19 @@ export function ContactSection({ activeColor, activePanelColor }) {
               )}
 
             </div>
-          </div>
+          </motion.div>
 
         </div>
       </div>
+
+      {/* Visual Divider to separate from Footer */}
+      <div 
+        className="absolute bottom-0 left-0 w-full h-[1px] opacity-30"
+        style={{ 
+          background: `linear-gradient(90deg, transparent, ${activeColor}, transparent)`,
+          boxShadow: `0 -10px 20px ${activeColor}50`
+        }}
+      />
     </section>
   );
 }

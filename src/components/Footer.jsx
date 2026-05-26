@@ -33,7 +33,7 @@ export function Footer({ activeColor }) {
   ];
 
   return (
-    <footer className="relative w-full bg-[#050506] border-t border-white/5 pt-16 pb-12 select-text text-white">
+    <footer className="relative w-full bg-[#020203] pt-16 pb-12 select-text text-white">
       {/* Structural subtle glow matching active color */}
       <div 
         style={{

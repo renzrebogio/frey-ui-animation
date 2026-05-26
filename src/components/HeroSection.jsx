@@ -13,9 +13,13 @@ export function HeroSection({
     <div
       id="frey-hero-section"
       style={{
+        position: 'relative',
+        zIndex: 10,
         backgroundColor: IMAGES[activeIndex].bg,
         transition: 'background-color 650ms cubic-bezier(0.4, 0, 0.2, 1)',
         fontFamily: "'Inter', sans-serif",
+        marginTop: 0,
+        paddingTop: 0,
       }}
       className="relative w-full overflow-x-hidden select-none"
     >
