@@ -230,7 +230,7 @@ function ExpandPanel({ project, onClose, activeColor = '#e05c3a' }) {
 /* ─── Project Card ─── */
 function ProjectCard({ project, isExpanded, onToggle, index, activeColor = '#e05c3a' }) {
   const [hovered, setHovered] = useState(false);
-  const ThumbSVG = SVG_MAP[project.id];
+  const ThumbSVG = SVG_MAP[project.id] || SVG_MAP[project.id % 5];
   const cardRef = useRef(null);
 
   // Scroll-linked reversible animation
@@ -253,15 +253,19 @@ function ProjectCard({ project, isExpanded, onToggle, index, activeColor = '#e05
         scale,
         filter,
         willChange: 'transform, opacity',
-        gridColumn: project.featured ? 'span 2' : 'span 1',
-        background: hovered ? '#0d0d0d' : '#080808',
+        gridColumn: 'span 1',
+        background: hovered ? '#0e0e11' : '#08080a',
+        border: hovered ? `1px solid ${activeColor}33` : '1px solid rgba(255,255,255,0.05)',
+        boxShadow: hovered ? `0 12px 30px -10px ${activeColor}20` : 'none',
         position: 'relative',
         cursor: 'pointer',
         overflow: 'hidden',
-        padding: '20px',
+        padding: '22px 20px',
         display: 'flex',
         flexDirection: 'column',
-        transition: 'background 0.3s ease',
+        height: '390px',
+        transform: hovered ? 'translateY(-6px)' : 'translateY(0)',
+        transition: 'transform 300ms cubic-bezier(0.25, 0.8, 0.25, 1), background 300ms ease, border-color 300ms ease, box-shadow 300ms ease',
         zIndex: 10,
       }}
       onClick={onToggle}
@@ -270,7 +274,7 @@ function ProjectCard({ project, isExpanded, onToggle, index, activeColor = '#e05
     >
       {/* Dynamic top-edge bar on hover */}
       <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, height: '1px',
+        position: 'absolute', top: 0, left: 0, right: 0, height: '2px',
         background: activeColor,
         transform: hovered ? 'scaleX(1)' : 'scaleX(0)',
         transformOrigin: 'left',
@@ -305,6 +309,8 @@ function ProjectCard({ project, isExpanded, onToggle, index, activeColor = '#e05
       <div style={{
         width: '100%', height: '120px', borderRadius: '2px',
         overflow: 'hidden', marginBottom: '14px', background: '#0a0a0a',
+        transform: hovered ? 'scale(1.04)' : 'scale(1)',
+        transition: 'transform 350ms cubic-bezier(0.25, 0.8, 0.25, 1)',
       }}>
         {ThumbSVG && <ThumbSVG activeColor={activeColor} />}
       </div>
@@ -380,6 +386,7 @@ export function ProjectsSection({
   activeColor = '#e05c3a',
 }) {
   const [expandedId, setExpandedId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const containerRef = useRef(null);
 
   const { scrollYProgress } = useScroll({
@@ -398,20 +405,25 @@ export function ProjectsSection({
     (p) => activeProjectTab === 'all' || p.category === activeProjectTab
   );
 
+  const ITEMS_PER_PAGE = 6;
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const currentProjects = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
   const count = String(filtered.length).padStart(2, '0');
 
   const handleTabChange = (key) => {
     setActiveProjectTab(key);
     setExpandedId(null);
     setCurrentSelectedProject(0);
+    setCurrentPage(1);
   };
 
   const handleToggle = (id) => {
     setExpandedId((prev) => (prev === id ? null : id));
   };
 
-  // Group cards into rows of: featured row (if featured card present) + regular rows of 3
-  // We need to insert expand panels after the row containing the clicked card
+  // Group cards into rows of 3 for ExpandPanel insertion
   const buildGrid = () => {
     const elements = [];
     let currentRow = [];
@@ -448,8 +460,9 @@ export function ProjectsSection({
       currentRowSpan = 0;
     };
 
-    filtered.forEach((project, idx) => {
-      const span = project.featured ? 2 : 1;
+    currentProjects.forEach((project, idx) => {
+      // Force span to always be 1 for uniformity
+      const span = 1;
 
       if (currentRowSpan + span > 3) {
         flushRow(idx);
@@ -602,6 +615,102 @@ export function ProjectsSection({
           {buildGrid()}
         </div>
 
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginTop: '40px',
+            paddingTop: '20px',
+            fontFamily: "'Courier New', monospace",
+          }}>
+            <span style={{ fontSize: '10px', color: '#444', letterSpacing: '0.1em' }}>
+              PAGE {currentPage} OF {totalPages}
+            </span>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button
+                type="button"
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid #1a1a1a',
+                  color: currentPage === 1 ? '#222' : '#888',
+                  padding: '6px 14px',
+                  borderRadius: '4px',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.25s ease',
+                }}
+                onMouseEnter={(e) => {
+                  if (currentPage > 1) { e.target.style.borderColor = activeColor; e.target.style.color = activeColor; }
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.borderColor = '#1a1a1a'; if (currentPage > 1) e.target.style.color = '#888';
+                }}
+              >
+                &lt;
+              </button>
+              {Array.from({ length: totalPages }).map((_, i) => {
+                const pageNum = i + 1;
+                const isPageActive = pageNum === currentPage;
+                return (
+                  <button
+                    key={pageNum}
+                    type="button"
+                    onClick={() => setCurrentPage(pageNum)}
+                    style={{
+                      background: isPageActive ? activeColor : 'transparent',
+                      border: `1px solid ${isPageActive ? activeColor : '#1a1a1a'}`,
+                      color: isPageActive ? '#000' : '#555',
+                      padding: '6px 12px',
+                      borderRadius: '4px',
+                      fontSize: '10px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      transition: 'all 0.25s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isPageActive) { e.target.style.borderColor = '#333'; e.target.style.color = '#888'; }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isPageActive) { e.target.style.borderColor = '#1a1a1a'; e.target.style.color = '#555'; }
+                    }}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid #1a1a1a',
+                  color: currentPage === totalPages ? '#222' : '#888',
+                  padding: '6px 14px',
+                  borderRadius: '4px',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.25s ease',
+                }}
+                onMouseEnter={(e) => {
+                  if (currentPage < totalPages) { e.target.style.borderColor = activeColor; e.target.style.color = activeColor; }
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.borderColor = '#1a1a1a'; if (currentPage < totalPages) e.target.style.color = '#888';
+                }}
+              >
+                &gt;
+              </button>
+            </div>
+          </div>
+        )}
+
       </div>
 
       {/* Inject keyframes and responsive grid styles */}
@@ -621,9 +730,6 @@ export function ProjectsSection({
         @media (max-width: 640px) {
           .frey-project-grid {
             grid-template-columns: 1fr;
-          }
-          .frey-project-grid > div[style*="grid-column: span 2"] {
-            grid-column: span 1 !important;
           }
         }
       `}</style>

@@ -89,6 +89,58 @@ export const PROJECTS = [
     ],
     expandDesc: 'Distributed sensor mesh protocol for low-power MCU networks. Implements adaptive polling with onboard anomaly detection, cutting cloud telemetry overhead. Core Frey embedded research project.',
   },
+  {
+    id: 0, // We can use unique IDs. Let's make IDs sequential: 5, 6, 7, 8
+    id: 5,
+    num: '06',
+    category: 'compliance',
+    tag: 'Compliance // Audited',
+    status: 'live',
+    title: 'Aegis Sentinel',
+    desc: 'Continuous non-invasive policy evaluator validating active server configurations and user credentials under strict SOC2 rulesets.',
+    tech: ['Docker', 'OPA Rego', 'AWS IAM'],
+    featured: false,
+    metrics: [
+      { value: '2.4s', label: 'Scan Time' },
+      { value: 'SOC2', label: 'Compliance' },
+      { value: '100%', label: 'Coverage' },
+    ],
+    expandDesc: 'Continuous configuration auditing daemon running non-invasive compliance verification scans across federated container runtimes.',
+  },
+  {
+    id: 6,
+    num: '07',
+    category: 'backend',
+    tag: 'Backend // Active',
+    status: 'live',
+    title: 'Hydra Gateway',
+    desc: 'Hyper-scalable proxy forwarding HTTP/3 and WebSockets with zero-copy stream processing and runtime connection throttling.',
+    tech: ['Rust', 'Tokio', 'QUIC'],
+    featured: false,
+    metrics: [
+      { value: '85Gb/s', label: 'Throughput' },
+      { value: '0-copy', label: 'Forwarding' },
+      { value: 'QUIC', label: 'Protocol' },
+    ],
+    expandDesc: 'High-throughput stream proxy optimized for gRPC and WebSocket streams, featuring low latency memory mapping and flow control.',
+  },
+  {
+    id: 7,
+    num: '08',
+    category: 'frontend',
+    tag: 'Frontend // Production',
+    status: 'active',
+    title: 'Lumen Canvas',
+    desc: 'A high-performance vector render pipeline utilizing local space matrix calculations and compressed state diffing.',
+    tech: ['TypeScript', 'Wasm', 'Canvas'],
+    featured: false,
+    metrics: [
+      { value: '120Hz', label: 'Refresh Rate' },
+      { value: 'Wasm', label: 'Core Engine' },
+      { value: '<1ms', label: 'Frame Time' },
+    ],
+    expandDesc: 'WebAssembly-powered vector rendering engine for high-frequency interactive canvas applications and multi-user drawing environments.',
+  },
 ];
 
 export const IMAGES = [
